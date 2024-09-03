@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Mood Mathematics Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .calculator {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .display {
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .emoji-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .emoji-button {
+            font-size: 36px;
+            padding: 18px;
+            border: none;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .emoji-button:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.05);
+        }
+        .calculate-button {
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .calculate-button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            font-size: 28px;
+            margin-top: 20px;
+        }
+        .emoji-result {
+            font-size: 48px;
+            margin-top: 20px;
+        }
+        .emoji-expression {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #4a4a4a;
+        }
+        .story {
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #333;
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Emoji Mood Mathematics Calculator</h1>
+        <form method="POST">
+            <div class="display" id="display"></div>
+            <div class="emoji-board">
+                {% for char, info in mood_map.items() %}
+                    <button type="button" class="emoji-button" onclick="appendChar('{{ char }}')">{{ info.emoji|safe }}</button>
+                {% endfor %}
+            </div>
+            <button type="submit" class="calculate-button">Calculate Mood</button>
+            <input type="hidden" name="expression" id="expression-input">
+        </form>
+        {% if emoji_result %}
+            <div class="emoji-expression">Expression: {{ emoji_expression }}</div>
+            <div class="result">Result: {{ result }}</div>
+            <div class="emoji-result">Mood: {{ emoji_result }}</div>
+            <div class="story">{{ story }}</div>
+        {% endif %}
+    </div>
+    <script>
+        const display = document.getElementById('display');
+        const expressionInput = document.getElementById('expression-input');
+
+        function appendChar(char) {
+            display.textContent += char;
+            expressionInput.value = display.textContent;
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            expressionInput.value = display.textContent;
+        });
+    </script>
+</body>
+</html>
