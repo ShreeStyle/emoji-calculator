@@ -7,20 +7,20 @@ app = Flask(__name__)
 
 # Mapping of digits and operators to emojis and moods
 mood_map = {
-    "0": {"emoji": ":neutral_face:", "mood": "neutral"},
-    "1": {"emoji": ":slightly_smiling_face:", "mood": "slightly happy"},
-    "2": {"emoji": ":smiley:", "mood": "happy"},
-    "3": {"emoji": ":partying_face:", "mood": "excited"},
-    "4": {"emoji": ":heart_eyes:", "mood": "in love"},
-    "5": {"emoji": ":star_struck:", "mood": "amazed"},
-    "6": {"emoji": ":sunglasses:", "mood": "cool"},
-    "7": {"emoji": ":nerd_face:", "mood": "nerdy"},
-    "8": {"emoji": ":exploding_head:", "mood": "mind-blown"},
-    "9": {"emoji": ":face_with_raised_eyebrow:", "mood": "suspicious"},
-    "+": {"emoji": ":hugging_face:", "mood": "friendly"},
-    "-": {"emoji": ":unamused:", "mood": "annoyed"},
-    "*": {"emoji": ":zany_face:", "mood": "wild"},
-    "/": {"emoji": ":grimacing:", "mood": "anxious"}
+    "0": {"emoji": "😐", "mood": "neutral"},
+    "1": {"emoji": "🙂", "mood": "slightly happy"},
+    "2": {"emoji": "😃", "mood": "happy"},
+    "3": {"emoji": "🥳", "mood": "excited"},
+    "4": {"emoji": "😍", "mood": "in love"},
+    "5": {"emoji": "🤩", "mood": "amazed"},
+    "6": {"emoji": "😎", "mood": "cool"},
+    "7": {"emoji": "🤓", "mood": "nerdy"},
+    "8": {"emoji": "🤯", "mood": "mind-blown"},
+    "9": {"emoji": "🤨", "mood": "suspicious"},
+    "+": {"emoji": "+", "mood": "friendly"},
+    "-": {"emoji": "-", "mood": "annoyed"},
+    "*": {"emoji": "×", "mood": "wild"},
+    "/": {"emoji": "÷", "mood": "anxious"}
 }
 
 # Emoji art templates
@@ -35,36 +35,43 @@ emoji_art = {
     "relaxed": "🏖️☮️🧘🌅🍹"
 }
 
-def interpret_mood(score):
-    if score < -10:
-        return "angry"
-    elif -10 <= score < 0:
-        return "sad"
-    elif 0 <= score < 5:
-        return "confused"
-    elif 5 <= score < 10:
-        return "happy"
-    elif 10 <= score < 20:
-        return "excited"
-    elif 20 <= score < 30:
-        return "loving"
-    elif 30 <= score < 40:
-        return "adventurous"
-    else:
-        return "relaxed"
+def evaluate_mood_combo(expression, result):
+    parts = []
+    for char in str(expression):
+        if char in mood_map:
+            # For operators, add the symbol, for operands add the mood word
+            if char in "+-*/":
+                if char == '+': parts.append("plus")
+                elif char == '-': parts.append("minus")
+                elif char == '*': parts.append("multiplied by")
+                elif char == '/': parts.append("divided by")
+            else:
+                parts.append(mood_map[char]["mood"])
+    
+    meaningful_expr = " ".join(parts)
+    
+    # Specific fun overrides
+    if "happy plus happy" in meaningful_expr:
+        return "joyful", "👯‍♀️💖✨", f"Happy plus happy always equals joyful! Your calculation resulted in {result}. These numbers are best friends spreading positive vibes everywhere."
+    
+    if "angry" in meaningful_expr or "annoyed" in meaningful_expr:
+        if result > 0:
+            return "calmed down", "😌🍵🌿", f"Even though things started negative with '{meaningful_expr}', the result is a positive {result}. The numbers drank some tea and calmed down."
+        else:
+            return "furious", "🌋🤬💥", f"Oh no, '{meaningful_expr}' ended up at {result}. The numbers are absolutely furious and starting a riot!"
 
-def generate_story(mood, expression, result):
-    stories = {
-        "angry": f"Oh no! Your calculation ({expression}) resulted in {result}, which made the numbers really angry! They're stomping around and causing quite a ruckus. Maybe try adding some happy numbers to calm them down?",
-        "sad": f"Aw, your mathematical journey ({expression}) led to {result}, and now the numbers are feeling a bit blue. Perhaps they need a mathematical hug?",
-        "confused": f"Well, that's odd! Your calculation ({expression}) gave {result}, and now the numbers are scratching their heads in confusion. They're not sure if they should celebrate or take a nap.",
-        "happy": f"Yay! Your math adventure ({expression}) resulted in a cheerful {result}. The numbers are doing a little happy dance!",
-        "excited": f"Wow! {expression} turned into an exhilarating {result}! The numbers are bouncing off the walls with excitement. They might need some chamomile tea to calm down.",
-        "loving": f"Aww, how sweet! Your calculation ({expression}) blossomed into a loving {result}. The numbers are forming heart shapes and writing mathematical love poems.",
-        "adventurous": f"Hold onto your calculators! {expression} transformed into a thrill-seeking {result}. The numbers are packing their bags for a mathematical expedition!",
-        "relaxed": f"Aaah, bliss! Your serene calculation ({expression}) mellowed into a zen-like {result}. The numbers are lounging on geometric beaches, sipping on pi-ña coladas."
-    }
-    return stories[mood]
+    if result == 0:
+        return "peaceful", "🧘‍♀️🕊️🍃", f"'{meaningful_expr}' balances perfectly to zero. The numbers have achieved true inner peace and zen."
+    elif result < 0:
+        return "grumpy", "🌩️😠📉", f"'{meaningful_expr}' led to a negative space ({result}). The numbers are quite grumpy about being less than nothing!"
+    elif 1 <= result <= 5:
+        return "joyful", "😊🎈🌻", f"'{meaningful_expr}' adds up nicely to {result}. It's a small but joyful step into happiness."
+    elif 6 <= result <= 15:
+        return "thrilled", "🥳🎆🎢", f"Wow! '{meaningful_expr}' skyrocketed to {result}! The numbers are thrilled and having a massive celebration!"
+    elif result > 15:
+        return "mind-blown", "🤯🚀🌌", f"Incredible! '{meaningful_expr}' reached an astronomical {result}. The numbers are absolutely mind-blown by this math!"
+    else:
+        return "confused", "🌀🤔🧩", f"'{meaningful_expr}' resulted in {result}. The numbers are scratching their heads in confusion."
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -76,32 +83,24 @@ def home():
     if request.method == "POST":
         expression = request.form.get("expression")
         try:
-            # Convert expression to emoji and calculate mood score
+            # Convert expression to emoji string for display
             emoji_expression = ""
-            mood_score = 0
             for char in expression:
                 if char in mood_map:
-                    emoji_expression += emojize(mood_map[char]["emoji"])
-                    mood_score += list(mood_map.keys()).index(char) - 5  # Center the mood score around 0
+                    emoji_expression += mood_map[char]["emoji"]
                 else:
                     emoji_expression += char
             
             # Evaluate the expression
             result = eval(expression)
             
-            # Interpret the mood based on the result and mood score
-            mood = interpret_mood(mood_score * result)
-            
-            # Generate emoji art
-            emoji_result = emoji_art[mood]
-            
-            # Generate story
-            story = generate_story(mood, expression, result)
+            # Interpret the mood based on combinations
+            mood, emoji_result, story = evaluate_mood_combo(expression, result)
             
         except Exception as e:
-            result = "Error occurred..."
-            emoji_result = emojize(":warning:")
-            story = "Oops! The numbers got tangled up in a mathematical knot. Maybe try a different calculation?"
+            result = "Error"
+            emoji_result = "⚠️"
+            story = "Oops! The numbers got tangled up in a mathematical knot. Please ensure you enter a valid calculation!"
     
     return render_template("index.html", result=result, mood=mood, story=story, 
                            emoji_expression=emoji_expression, emoji_result=emoji_result, 
